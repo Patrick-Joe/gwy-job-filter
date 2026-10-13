@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>公务员岗位智能筛选系统</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="grid-bg" aria-hidden="true"></div>
+
+<div class="app">
+
+  <!-- ========== 页头 ========== -->
+  <header class="app-header">
+    <div class="brand">
+      <h1>公务员岗位智能筛选系统</h1>
+      <p class="subtitle">导入岗位表 → 填写个人条件 → 逐岗位判定 符合 / 不符合 / 待核实</p>
+    </div>
+  </header>
+
+  <!-- ========== 数据导入 ========== -->
+  <section class="panel" id="importSection" aria-label="数据导入">
+    <div class="panel-head">
+      <h2>数据导入</h2>
+      <div class="file-meta">
+        <span id="fileInfo" class="file-info">未导入文件</span>
+        <button type="button" id="btnMapping" class="btn btn-small" disabled>字段映射</button>
+        <button type="button" id="btnReupload" class="btn btn-small" disabled>重新导入</button>
+      </div>
+    </div>
+    <div id="dropZone" class="drop-zone">
+      <p class="dz-title">拖拽岗位表文件（.xlsx / .xls / .csv）到此处</p>
+      <p class="dz-hint">原始数据一字不改 · 多 Sheet 自动探测表头 · 也支持 CSV</p>
+      <button type="button" id="btnPickFile" class="btn btn-primary">选择文件</button>
+      <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" hidden>
+    </div>
+  </section>
+
+  <!-- ========== 筛选条件 ========== -->
+  <section class="panel" aria-label="筛选条件">
+    <div class="tabs-row">
+      <div class="tabs" role="tablist" aria-label="筛选模式">
+        <button type="button" id="tabSmart" class="tab active" role="tab" aria-selected="true" aria-controls="panelSmart">智能资格匹配</button>
+        <button type="button" id="tabRaw" class="tab" role="tab" aria-selected="false" aria-controls="panelRaw">原始条件筛选</button>
+      </div>
+      <div class="preset-controls">
+        <select id="selPreset" aria-label="载入条件方案">
+          <option value="" selected>载入方案…</option>
+        </select>
+        <button type="button" id="btnSavePreset" class="btn btn-small">保存方案</button>
+        <button type="button" id="btnClear" class="btn btn-small">清空条件</button>
+      </div>
+    </div>
+
+    <!-- 智能模式面板 -->
+    <div id="panelSmart" class="panel-body" role="tabpanel" aria-labelledby="tabSmart">
+      <div class="filter-grid">
+        <div class="field span2">
+          <label for="inputMajor">专业关键词</label>
+          <div class="major-row">
+            <input type="text" id="inputMajor" placeholder="多个关键词用逗号/空格分隔，如：法学 0301">
+            <select id="majorMode" aria-label="专业匹配方式">
+              <option value="fuzzy" selected>模糊匹配</option>
+              <option value="exact">精确匹配</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label for="selEducation">学历</label>
+          <select id="selEducation">
+            <option value="0" selected>不限</option>
+            <option value="1">专科</option>
+            <option value="2">本科</option>
+            <option value="3">硕士研究生</option>
+            <option value="4">博士研究生</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="selDegree">学位</label>
+          <select id="selDegree">
+            <option value="0" selected>不限</option>
+            <option value="1">学士</option>
+            <option value="2">硕士</option>
+            <option value="3">博士</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="selPolitical">政治面貌</label>
+          <select id="selPolitical">
+            <option value="" selected>不限</option>
+            <option value="党员">中共党员</option>
+            <option value="预备党员">中共预备党员</option>
+            <option value="团员">共青团员</option>
+            <option value="群众">群众</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="selExpYears">基层工作年限</label>
+          <select id="selExpYears">
+            <option value="-1" selected>不限</option>
+            <option value="0">无基层工作经历</option>
+            <option value="1">1年</option>
+            <option value="2">2年</option>
+            <option value="3">3年</option>
+            <option value="4">4年</option>
+            <option value="5">5年及以上</option>
+          </select>
+        </div>
+        <div class="field span2">
+          <span class="field-label">服务基层项目经历</span>
+          <div id="projectChecks" class="check-group">
+            <label class="check-chip"><input type="checkbox" value="cunguan">大学生村官</label>
+            <label class="check-chip"><input type="checkbox" value="sanzhifu">三支一扶</label>
+            <label class="check-chip"><input type="checkbox" value="xibu">西部计划</label>
+            <label class="check-chip"><input type="checkbox" value="tegang">特岗教师</label>
+            <label class="check-chip"><input type="checkbox" value="tuiyi">退役士兵</label>
+            <label class="check-chip"><input type="checkbox" value="none">无相关经历</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 原始模式面板 -->
+    <div id="panelRaw" class="panel-body" role="tabpanel" aria-labelledby="tabRaw" hidden>
+      <div class="filter-grid">
+        <div class="field">
+          <label for="raw-major">专业</label>
+          <input type="text" id="raw-major" placeholder="岗位表【专业】列关键词">
+        </div>
+        <div class="field">
+          <label for="raw-education">学历</label>
+          <input type="text" id="raw-education" placeholder="岗位表【学历】列关键词">
+        </div>
+        <div class="field">
+          <label for="raw-degree">学位</label>
+          <input type="text" id="raw-degree" placeholder="岗位表【学位】列关键词">
+        </div>
+        <div class="field">
+          <label for="raw-political">政治面貌</label>
+          <input type="text" id="raw-political" placeholder="岗位表【政治面貌】列关键词">
+        </div>
+        <div class="field">
+          <label for="raw-expYears">基层工作最低年限</label>
+          <input type="text" id="raw-expYears" placeholder="岗位表【基层工作最低年限】列关键词">
+        </div>
+        <div class="field">
+          <label for="raw-project">服务基层项目</label>
+          <input type="text" id="raw-project" placeholder="岗位表【服务基层项目】列关键词">
+        </div>
+        <div class="field">
+          <label for="rawKeyword">任意列关键词</label>
+          <input type="text" id="rawKeyword" placeholder="部门 / 工作地点 / 备注等任意列">
+        </div>
+      </div>
+    </div>
+
+    <div class="tags-row">
+      <span class="tags-label">当前条件</span>
+      <div id="filterTags" class="filter-tags"></div>
+    </div>
+  </section>
+
+  <!-- ========== 统计条 + 表格工具 ========== -->
+  <section class="stats-bar" aria-label="匹配统计">
+    <div class="stat">
+      <span class="stat-label">岗位总数</span>
+      <span class="stat-value" id="statTotal">0</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">✅ 符合</span>
+      <span class="stat-value" id="statMatch">0</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">⚠️ 待核实</span>
+      <span class="stat-value" id="statUnknown">0</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">❌ 不符合</span>
+      <span class="stat-value" id="statNomatch">0</span>
+    </div>
+    <div class="stats-tools">
+      <label class="sheet-filter" for="sheetSelect">工作表
+        <select id="sheetSelect" disabled>
+          <option value="" selected>全部</option>
+        </select>
+      </label>
+      <button type="button" id="btnExport" class="btn btn-primary" disabled>导出结果</button>
+    </div>
+  </section>
+
+  <!-- ========== 结果表格（撑满剩余视口） ========== -->
+  <main class="table-section">
+    <div id="tableContainer" class="table-container">
+      <div class="table-empty">尚未导入数据 —— 请先在上方导入岗位表文件</div>
+    </div>
+  </main>
+
+</div>
+
+<!-- ========== 字段映射模态框 ========== -->
+<div id="mappingModal" class="modal-overlay" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-label="字段映射">
+    <div class="modal-head">
+      <h2>字段映射</h2>
+      <button type="button" id="btnMappingClose" class="btn btn-small">✕ 关闭</button>
+    </div>
+    <p class="modal-hint">为 6 个核心字段选择对应的表格列（留空表示该字段不参与智能匹配）：</p>
+    <div class="mapping-grid">
+      <div class="mapping-row">
+        <label for="map-major">专业</label>
+        <select id="map-major"><option value="" selected>（不映射）</option></select>
+      </div>
+      <div class="mapping-row">
+        <label for="map-education">学历</label>
+        <select id="map-education"><option value="" selected>（不映射）</option></select>
+      </div>
+      <div class="mapping-row">
+        <label for="map-degree">学位</label>
+        <select id="map-degree"><option value="" selected>（不映射）</option></select>
+      </div>
+      <div class="mapping-row">
+        <label for="map-political">政治面貌</label>
+        <select id="map-political"><option value="" selected>（不映射）</option></select>
+      </div>
+      <div class="mapping-row">
+        <label for="map-expYears">基层工作最低年限</label>
+        <select id="map-expYears"><option value="" selected>（不映射）</option></select>
+      </div>
+      <div class="mapping-row">
+        <label for="map-project">服务基层项目</label>
+        <select id="map-project"><option value="" selected>（不映射）</option></select>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button type="button" id="btnMappingSave" class="btn btn-primary">保存映射</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 详情抽屉 ========== -->
+<aside id="detailDrawer" class="drawer" aria-hidden="true" aria-label="岗位详情">
+  <div class="drawer-head">
+    <h2>岗位详情</h2>
+    <button type="button" id="btnDrawerClose" class="btn btn-small">✕ 关闭</button>
+  </div>
+  <div id="detailBody" class="drawer-body"></div>
+</aside>
+
+<!-- ========== 加载遮罩 ========== -->
+<div id="loadingOverlay" class="loading-overlay" hidden>
+  <div class="loading-box">
+    <div class="spinner" aria-hidden="true"></div>
+    <p id="loadingText">加载中…</p>
+  </div>
+</div>
+
+<script src="libs/xlsx.full.min.js"></script>
+<script src="js/config.js"></script>
+<script src="js/normalize.js"></script>
+<script src="js/matching.js"></script>
+<script src="js/excel.js"></script>
+<script src="js/export.js"></script>
+<script src="js/rawfilter.js"></script>
+<script src="js/table.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
