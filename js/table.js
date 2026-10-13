@@ -84,6 +84,7 @@
     if (!containerEl || !containerEl.nodeType) throw new Error('[ResultTable] init: containerEl 无效');
     S.container = containerEl;
     S.onRowClick = opts && typeof opts.onRowClick === 'function' ? opts.onRowClick : null;
+    S.onStatusFilterChange = opts && typeof opts.onStatusFilterChange === 'function' ? opts.onStatusFilterChange : null;
     S.entries = [];
     S.columns = [];
     S.filters = {};
@@ -514,6 +515,9 @@
     S.statusFilter = sel.value;
     S.page = 1;
     update();
+    if (typeof S.onStatusFilterChange === 'function') {
+      S.onStatusFilterChange(S.statusFilter);
+    }
   }
 
   function onBodyClick(ev) {
@@ -570,6 +574,17 @@
     /* 以下为 SPEC 契约外的辅助接口，供集成阶段（导出当前视图等）选用 */
     getView: function () { return S.view.slice(); },        /* 当前过滤+排序后的全量 entries */
     refresh: function () { update(); },
+    /* 程序化设置/读取状态过滤（'' | match | nomatch | unknown | none），供外部选项卡/统计卡片联动 */
+    setStatusFilter: function (v) {
+      v = (v === 'match' || v === 'nomatch' || v === 'unknown' || v === 'none') ? v : '';
+      if (S.statusFilter === v) return;
+      S.statusFilter = v;
+      S.page = 1;
+      var sel = S.els.thead && S.els.thead.querySelector('.rt-status-filter');
+      if (sel) sel.value = v;
+      update();
+    },
+    getStatusFilter: function () { return S.statusFilter; },
     getState: function () {
       return {
         total: S.entries.length,

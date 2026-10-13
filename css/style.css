@@ -977,3 +977,64 @@ h2::before {
   font-size: 13px;
   font-weight: 700;
 }
+
+/* ---- 状态视图选项卡 + 可点击统计卡片（重算后默认落在"符合"） ---- */
+.status-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 0 2px 8px;
+  position: relative;
+  z-index: 1;
+}
+.status-tab {
+  padding: 6px 12px;
+  background: var(--paper);
+  border: 2px solid var(--dark);
+  color: var(--dark);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  box-shadow: 2px 2px 0 0 var(--shadow);
+  transition: all 0.15s ease;
+}
+.status-tab:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 0 var(--shadow);
+}
+.status-tab:active {
+  transform: translate(1px, 1px);
+  box-shadow: 0 0 0 0 var(--shadow);
+}
+.status-tab.active {
+  background: var(--dark);
+  color: var(--paper);
+  box-shadow: 2px 2px 0 0 var(--orange);
+}
+.status-tab .tab-count {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  border: 2px solid currentColor;
+  font-size: 10px;
+}
+.status-tab.active .tab-count {
+  border-color: var(--paper);
+  background: var(--orange);
+  color: #fff;
+}
+.stat-clickable {
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.15s ease;
+}
+.stat-clickable:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 0 var(--shadow);
+}
+.stat-clickable:active {
+  transform: translate(1px, 1px);
+  box-shadow: 0 0 0 0 var(--shadow);
+}

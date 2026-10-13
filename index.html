@@ -166,19 +166,19 @@
 
   <!-- ========== 统计条 + 表格工具 ========== -->
   <section class="stats-bar" aria-label="匹配统计">
-    <div class="stat">
+    <div class="stat stat-clickable" data-view="" role="button" tabindex="0" title="点击查看全部岗位">
       <span class="stat-label">岗位总数</span>
       <span class="stat-value" id="statTotal">0</span>
     </div>
-    <div class="stat">
+    <div class="stat stat-clickable" data-view="match" role="button" tabindex="0" title="点击只看符合条件的岗位">
       <span class="stat-label">✅ 符合</span>
       <span class="stat-value" id="statMatch">0</span>
     </div>
-    <div class="stat">
+    <div class="stat stat-clickable" data-view="unknown" role="button" tabindex="0" title="点击只看需人工核实的岗位">
       <span class="stat-label">⚠️ 待核实</span>
       <span class="stat-value" id="statUnknown">0</span>
     </div>
-    <div class="stat">
+    <div class="stat stat-clickable" data-view="nomatch" role="button" tabindex="0" title="点击只看不符合条件的岗位">
       <span class="stat-label">❌ 不符合</span>
       <span class="stat-value" id="statNomatch">0</span>
     </div>
@@ -191,6 +191,14 @@
       <button type="button" id="btnExport" class="btn btn-primary" disabled>导出结果</button>
     </div>
   </section>
+
+  <!-- ========== 状态视图选项卡（重算后默认落在"符合"） ========== -->
+  <nav id="statusTabs" class="status-tabs" aria-label="按匹配状态查看">
+    <button type="button" class="status-tab active" data-view="match">✅ 符合 <span class="tab-count" id="tabCountMatch">0</span></button>
+    <button type="button" class="status-tab" data-view="unknown">⚠️ 待核实 <span class="tab-count" id="tabCountUnknown">0</span></button>
+    <button type="button" class="status-tab" data-view="nomatch">❌ 不符合 <span class="tab-count" id="tabCountNomatch">0</span></button>
+    <button type="button" class="status-tab" data-view="">全部 <span class="tab-count" id="tabCountAll">0</span></button>
+  </nav>
 
   <!-- ========== 结果表格（撑满剩余视口） ========== -->
   <main class="table-section">

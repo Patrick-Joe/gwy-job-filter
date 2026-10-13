@@ -20,6 +20,7 @@
     headersUnion: [],  /* 全部 sheet 表头并集（映射下拉 / 导出列用） */
     mapping: { major: null, education: null, degree: null, political: null, expYears: null, project: null },
     mode: 'smart',     /* 'smart' | 'raw' */
+    statusView: 'match', /* 智能模式结果表的状态视图：'match'|'unknown'|'nomatch'|''（全部），重算后表格落在此视图 */
     ready: false,      /* 已成功导入数据 */
     recalcTimer: null,
     matchToken: 0      /* 代际计数：过期的异步匹配结果直接丢弃 */
@@ -252,6 +253,8 @@
       els.statMatch.textContent = fmt(nMatch);
       els.statUnknown.textContent = fmt(nUnknown);
       els.statNomatch.textContent = fmt(nNomatch);
+      updateStatusTabs({ total: jobs.length, match: nMatch, unknown: nUnknown, nomatch: nNomatch });
+      applyStatusView();
       return true;
     });
   }
@@ -268,7 +271,42 @@
     els.statMatch.textContent = fmt(hits.length);
     els.statUnknown.textContent = '—';
     els.statNomatch.textContent = '—';
+    updateStatusTabs({ total: jobs.length, match: hits.length, unknown: null, nomatch: null });
     return Promise.resolve(true);
+  }
+
+  /* ---------------- 状态视图（✅/⚠️/❌ 选项卡与统计卡片联动） ---------------- */
+  /* 智能模式：重算后表格自动落在 S.statusView（默认只看符合）；
+     原始模式：结果本身已是过滤集，状态视图固定为全部 */
+  function applyStatusView() {
+    var v = S.mode === 'smart' ? S.statusView : '';
+    if (g.ResultTable && typeof g.ResultTable.setStatusFilter === 'function') {
+      g.ResultTable.setStatusFilter(v);
+    }
+    var tabs = els.statusTabs ? els.statusTabs.querySelectorAll('.status-tab') : [];
+    for (var i = 0; i < tabs.length; i++) {
+      tabs[i].classList.toggle('active', tabs[i].getAttribute('data-view') === v);
+    }
+  }
+
+  function updateStatusTabs(c) {
+    if (els.tabCountMatch) els.tabCountMatch.textContent = c.match === null ? '—' : fmt(c.match);
+    if (els.tabCountUnknown) els.tabCountUnknown.textContent = c.unknown === null ? '—' : fmt(c.unknown);
+    if (els.tabCountNomatch) els.tabCountNomatch.textContent = c.nomatch === null ? '—' : fmt(c.nomatch);
+    if (els.tabCountAll) els.tabCountAll.textContent = fmt(c.total);
+  }
+
+  function setStatusView(v, fromTable) {
+    S.statusView = v;
+    if (fromTable) {
+      /* 来源是表格内状态下拉：只同步选项卡高亮，不再回写表格 */
+      var tabs = els.statusTabs ? els.statusTabs.querySelectorAll('.status-tab') : [];
+      for (var i = 0; i < tabs.length; i++) {
+        tabs[i].classList.toggle('active', tabs[i].getAttribute('data-view') === v);
+      }
+      return;
+    }
+    applyStatusView();
   }
 
   function scheduleRecalc() {
@@ -286,6 +324,7 @@
     els.tabRaw.setAttribute('aria-selected', mode === 'raw' ? 'true' : 'false');
     els.panelSmart.hidden = mode !== 'smart';
     els.panelRaw.hidden = mode !== 'raw';
+    if (els.statusTabs) els.statusTabs.hidden = mode !== 'smart';
     recalc();
   }
 
@@ -683,6 +722,23 @@
     /* 导出 */
     els.btnExport.addEventListener('click', exportView);
 
+    /* 状态视图选项卡 */
+    if (els.statusTabs) {
+      els.statusTabs.addEventListener('click', function (e) {
+        var btn = e.target && e.target.closest ? e.target.closest('.status-tab') : null;
+        if (!btn || !els.statusTabs.contains(btn)) return;
+        setStatusView(btn.getAttribute('data-view') || '');
+      });
+    }
+    /* 统计卡片点击 = 切换状态视图（支持键盘 Enter/Space） */
+    Array.prototype.forEach.call(document.querySelectorAll('.stat-clickable'), function (card) {
+      var go = function () { setStatusView(card.getAttribute('data-view') || ''); };
+      card.addEventListener('click', go);
+      card.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); }
+      });
+    });
+
     /* 详情抽屉 */
     els.btnDrawerClose.addEventListener('click', closeDrawer);
     document.addEventListener('keydown', function (e) {
@@ -723,14 +779,19 @@
       'inputMajor', 'majorMode', 'selEducation', 'selDegree', 'selPolitical', 'selExpYears', 'projectChecks',
       'rawKeyword', 'btnClear', 'btnSavePreset', 'selPreset', 'filterTags',
       'statTotal', 'statMatch', 'statUnknown', 'statNomatch',
+      'statusTabs', 'tabCountMatch', 'tabCountUnknown', 'tabCountNomatch', 'tabCountAll',
       'tableContainer', 'btnExport', 'loadingOverlay', 'loadingText',
       'detailDrawer', 'detailBody', 'btnDrawerClose'
     ].forEach(function (id) { els[id] = $(id); });
 
-    g.ResultTable.init(els.tableContainer, { onRowClick: openDrawer });
+    g.ResultTable.init(els.tableContainer, {
+      onRowClick: openDrawer,
+      onStatusFilterChange: function (v) { setStatusView(v, true); }
+    });
     bindEvents();
     refreshPresetSelect();
     renderTags();
+    applyStatusView();
     tryLoadDefaultData();
 
     g.App = {
@@ -745,6 +806,7 @@
       scopeJobs: scopeJobs,
       collectUserCond: collectUserCond,
       collectRawConds: collectRawConds,
+      setStatusView: setStatusView,
       state: function () { return S; }
     };
   }
